@@ -1,4 +1,5 @@
 # written by Yaniv Noy   works with Python 2.7
+# just an interpreter for target quad language
 from __future__ import print_function
 import re
 from sys import stdin, stderr, argv
