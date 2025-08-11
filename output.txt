@@ -1,0 +1,12 @@
+RINP a
+IINP c
+ITOR t3 c
+RGRT t1 t3 a
+REQL t2 t3 a
+IADD t1 t2 t1
+IGRT t1 t1 0
+IPRT t1
+RPRT a
+IPRT c
+HALT
+Gev Zoran

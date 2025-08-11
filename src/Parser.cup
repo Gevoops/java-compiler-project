@@ -1,0 +1,183 @@
+import compiler.ParserSym;
+import compiler.Lexer;
+import java.util.*;
+
+class Parser;
+
+parser code {:
+    Lexer s;
+    CodeGenerator codeGen;
+
+    Parser(Lexer s) {this.s = s;}
+
+    public void setCodeGenerator (CodeGenerator cg) {
+        this.codeGen = cg;
+    }
+
+    ArrayList<String> vars = new ArrayList<>();
+:}
+
+/* define how to connect to the scanner! */
+init with {: this.s = s; :};
+scan with {: return s.next_token(); :};
+
+/* Terminals (tokens returned by the scanner). */
+
+terminal String                RELOP, ADDOP, MULOP, CAST, ID, NUM;
+terminal                       OR, AND, NOT;
+terminal                       EQUALS, LPAREN, RPAREN, LBRACE, RBRACE, COMMA, COLON, SCOLON;
+terminal                       BREAK, CASE, DEFAULT, ELSE, FLOAT, IF, INPUT, INT, OUTPUT, SWITCH, WHILE;
+
+/* Non Terminals (tokens returned by the scanner). */
+
+non terminal                   program;
+non terminal                   declarations;
+non terminal                   declaration;
+non terminal                   stmt_block;
+non terminal                   idlist;
+non terminal                   type;
+non terminal                   stmt;
+non terminal                   assignment_stmt;
+non terminal                   input_stmt;
+non terminal                   output_stmt;
+non terminal                   if_stmt;
+non terminal                   while_stmt;
+non terminal                   switch_stmt;
+non terminal                   break_stmt;
+non terminal                   caselist;
+non terminal                   stmtlist;
+non terminal String            boolexpr, boolterm, boolfactor;
+non terminal String            term, factor, expression;
+
+/* The grammar rules */
+
+
+program ::= declarations stmt_block       {:
+        codeGen.emitQuad("HALT");
+        codeGen.emitQuad("Gev Zoran");
+:};
+
+declarations ::= declarations declaration {::}
+                  |                       {::};
+
+declaration ::= idlist COLON type SCOLON  {:
+
+:};
+
+type ::= INT
+            {:
+                for (String var : vars) {
+                    codeGen.declare(var, "int");
+                }
+                vars.clear();
+            :}
+   | FLOAT  {:
+                for (String var : vars) {
+                    codeGen.declare(var, "float");
+                }
+                vars.clear();
+            :};
+
+idlist ::= idlist COMMA ID:id  {: vars.add(id);:}
+           | ID:id             {: vars.add(id);:};
+
+stmt ::= assignment_stmt  {::}
+        | input_stmt      {::}
+        | output_stmt     {::}
+        | if_stmt         {::}
+        | while_stmt      {::}
+        | switch_stmt     {::}
+        | break_stmt      {::}
+        | stmt_block      {::};
+
+assignment_stmt ::= ID:id EQUALS expression:e SCOLON {:
+    if(codeGen.getType(id).equals(codeGen.getType(e))){
+        if(codeGen.getType(id).equals("float")){
+            codeGen.emitQuad("RASN", id, e);
+        }
+        if(codeGen.getType(id).equals("int")){
+            codeGen.emitQuad("IASN", id, e);
+        }
+    }
+:};
+
+input_stmt ::= INPUT LPAREN ID:id RPAREN SCOLON {:
+    if(codeGen.getType(id).equals("int")) {
+         codeGen.emitQuad("IINP", id);
+    }
+    if(codeGen.getType(id).equals("float")) {
+             codeGen.emitQuad("RINP", id);
+    }
+ :};
+
+output_stmt ::= OUTPUT LPAREN expression:e RPAREN SCOLON {:
+     if(codeGen.getType(e).equals("int")) {
+             codeGen.emitQuad("IPRT", e);
+     }
+     if(codeGen.getType(e).equals("float")) {
+             codeGen.emitQuad("RPRT", e);
+     }
+ :};
+
+if_stmt ::= IF LPAREN boolexpr:be RPAREN stmt ELSE stmt  {:
+        if(be.equals("1")){
+            System.out.println("TRUE");
+        }else if (be.equals("0")) {
+            System.out.println("FALSE");
+        }
+
+:};
+
+while_stmt ::= WHILE LPAREN boolexpr RPAREN stmt  {::};
+
+switch_stmt ::= SWITCH LPAREN expression RPAREN LBRACE caselist
+ DEFAULT COLON stmtlist RBRACE {::};
+
+caselist ::= caselist CASE NUM COLON stmtlist {::}
+             |                                {::};
+break_stmt ::= BREAK SCOLON  {::};
+
+stmt_block ::= LBRACE stmtlist RBRACE {::};
+
+stmtlist ::= stmtlist stmt  {::}
+             |              {::};
+
+boolexpr ::= boolexpr OR boolterm {::}
+            | boolterm:bt            {: RESULT = bt; :};
+
+boolterm ::= boolterm AND boolfactor {::}
+            | boolfactor:bf          {:  RESULT = bf; :};
+
+boolfactor ::= NOT LPAREN boolexpr RPAREN  {::}
+           | expression:e1 RELOP:rel expression:e2  {:
+                RESULT = codeGen.binaryOp(rel, e1, e2);
+           :};
+
+expression ::= expression:e ADDOP:op term:t   {: RESULT = codeGen.binaryOp(op, e, t);:}
+           | term:t                           {: RESULT = t; :};
+
+term ::= term:t MULOP:op factor:f             {: RESULT = codeGen.binaryOp(op, t, f);:}
+     | factor:f                               {: RESULT = f;  :};
+
+factor ::= LPAREN expression:e RPAREN         {:
+                RESULT = e;
+       :}
+          | CAST:cast LPAREN expression:e RPAREN   {:
+                String temp = codeGen.genTemp();
+                if (cast.equals("cast<int>")) {
+                    codeGen.emitQuad("RTOI", temp, e);
+                    codeGen.declare(temp, "int");
+                }
+                if (cast.equals("cast<float>")) {
+                    codeGen.emitQuad("ITOR", temp, e);
+                    codeGen.declare(temp, "float");
+                }
+                RESULT = temp;
+          :}
+          | ID:id                           {:
+                RESULT = id;
+          :}
+          | NUM:num                         {:
+                RESULT = num;
+          :};
+

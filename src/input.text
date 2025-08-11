@@ -1,0 +1,15 @@
+/* gev testing */
+a, b: float;
+c, d: int;
+e , f, g: float;
+h: int;
+{
+    input(a);
+    input(c);
+
+
+    if (c >= a)
+       output(a);
+    else
+       output(c);
+}
