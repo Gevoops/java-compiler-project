@@ -119,23 +119,51 @@ output_stmt ::= OUTPUT LPAREN expression:e RPAREN SCOLON {:
      }
  :};
 
-if_stmt ::= IF LPAREN boolexpr:be RPAREN stmt ELSE stmt  {:
-        if(be.equals("1")){
-            System.out.println("TRUE");
-        }else if (be.equals("0")) {
-            System.out.println("FALSE");
-        }
+if_stmt ::= IF LPAREN boolexpr:be RPAREN {:
+    JumpData data = new JumpData(be, codeGen.getCurrentLine());
+    codeGen.dummyJumpZ(data);
+ :}
+    stmt {:
+     JumpData data1 = new JumpData(codeGen.getCurrentLine());
+     codeGen.dummyJump(data1);
+     :}
+ ELSE  {:
+     codeGen.rectifyJumpZ();  :}
+    stmt  {:
+     codeGen.rectifyJump();
+ :};
 
-:};
+while_stmt ::= {:
+    JumpData data = new JumpData(codeGen.getCurrentLine());
+    codeGen.pushJumpStack(data);
+ :}
+WHILE
+ {: codeGen.pushBreakStack(-1);  :}
+ LPAREN boolexpr:be RPAREN {:
+    JumpData data = new JumpData(be, codeGen.getCurrentLine());
+    codeGen.dummyJumpZ(data);
+ :}
 
-while_stmt ::= WHILE LPAREN boolexpr RPAREN stmt  {::};
+ stmt  {:
+     JumpData data = codeGen.popJumpStack();
+     codeGen.emitQuad("JUMP", "" + data.getOriginalLine());
+     codeGen.rectifyJumpZ();
+
+     int lineOfBreak;
+     while ((lineOfBreak = codeGen.popBreakStack()) != -1 ) {
+         codeGen.editQuad(lineOfBreak, "JUMP","" + codeGen.getCurrentLine());
+     }
+ :};
 
 switch_stmt ::= SWITCH LPAREN expression RPAREN LBRACE caselist
  DEFAULT COLON stmtlist RBRACE {::};
 
 caselist ::= caselist CASE NUM COLON stmtlist {::}
              |                                {::};
-break_stmt ::= BREAK SCOLON  {::};
+break_stmt ::= BREAK SCOLON  {:
+    codeGen.pushBreakStack(codeGen.getCurrentLine());
+    codeGen.emitQuad("JUMP", "dummy");
+:};
 
 stmt_block ::= LBRACE stmtlist RBRACE {::};
 

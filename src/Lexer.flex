@@ -84,8 +84,8 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 
 {LETTER}({LETTER} | {DIGIT})* {return  Symbol1(ID, yytext());}
 
-{DIGIT}+            {return  Symbol1(NUM, yytext());}
-{DIGIT}+"."{DIGIT}* {return  Symbol1(NUM, yytext());}
+"-"?{DIGIT}+            {return  Symbol1(NUM, yytext());}
+"-"?{DIGIT}+"."{DIGIT}* {return  Symbol1(NUM, yytext());}
 
 cast<int> | cast<float>  {return  Symbol1(CAST,yytext());}
 

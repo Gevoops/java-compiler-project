@@ -3,9 +3,6 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 .idea/
-Compiler.iml
-libs/
-
 
 
 ### Eclipse ###
@@ -32,3 +29,10 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### just normal stuff
+/ParserSym.java
+Compiler.iml
+libs/
+*~
+

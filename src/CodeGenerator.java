@@ -1,18 +1,21 @@
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class CodeGenerator {
     private final FileWriter writer;
     private final Map<String,String> typeTable = new HashMap<>();
     private static int tempVarCounter = 1;
+    private final Stack<JumpData> jumpZStack = new Stack<>();
+    private final Stack<JumpData> jumpStack = new Stack<>();
+    private final Stack<Integer> breakJumpStack = new Stack<>();
+    private final List<String> code = new ArrayList<>();
 
     public CodeGenerator(String name) throws IOException {
         writer = new FileWriter(name);
     }
 
-    public String binaryOp(String op, String op1, String op2) throws IOException {
+    public String binaryOp(String op, String op1, String op2) {
         String res = genTemp();
         String ope = op;
         switch (op) {
@@ -22,20 +25,17 @@ public class CodeGenerator {
             case "/" -> op = "DIV";
             case "==" -> op = "EQL";
             case "!=" -> op = "NQL";
-            case "<", "<=" -> op = "LSS";
-            case ">", ">=" -> op = "GRT";
+            case "<", ">=" -> op = "LSS";
+            case ">", "<=" -> op = "GRT";
         }
 
-        String res1 = genTemp();
         boolean isFloat = true;
         if(getType(op1).equals(getType(op2))){
             if (getType(op1).equals("int")) {
                 isFloat = false;
                 emitQuad("I" + op, res , op1 , op2);
-                grtEqlHelper(ope,op1,op2,res1,res,"I");
             } else {
                 emitQuad("R" + op, res , op1 , op2);
-                grtEqlHelper(ope,op1,op2,res1,res,"R");
             }
         } else {
             String temp1 = genTemp();
@@ -43,11 +43,9 @@ public class CodeGenerator {
             if(getType(op1).equals("int")) {
                 emitQuad("ITOR", temp1, op1);
                 emitQuad("R" + op, res, temp1 , op2);
-                grtEqlHelper(ope,temp1,op2,res1,res,"R");
             } else {
                 emitQuad("ITOR", temp1, op2);
                 emitQuad("R" + op, res, op1, temp1);
-                grtEqlHelper(ope,op1,temp1,res1,res,"R");
             }
         }
         if (isFloat) {
@@ -55,17 +53,12 @@ public class CodeGenerator {
         } else {
             declare(res, "int");
         }
+        if(ope.equals("<=") || ope.equals(">=")) {
+            emitQuad("ISUB",res , "1" , res);
+        }
         return res;
     }
 
-    private void grtEqlHelper(String op,String op1,String op2, String res1, String res , String type) throws IOException{
-        if(op.equals("<=") || op.equals(">=")) {
-            emitQuad(type + "EQL", res1, op1 , op2);
-            emitQuad("IADD", res, res1, res);
-            emitQuad( "IGRT", res, res , "0");
-            emitQuad("IPRT",res);
-        }
-    }
 
     public String genTemp(){
         return "t" + tempVarCounter++;
@@ -80,10 +73,10 @@ public class CodeGenerator {
     }
 
     public String getType(String operand) {
-        if(operand.matches("\\d+")) {
+        if(operand.matches("-?\\d+")) {
             return "int";
         }
-        if(operand.matches("\\d+\\.\\d+")) {
+        if(operand.matches("-?\\d+\\.\\d+")) {
             return "float";
         }
         String type = typeTable.get(operand);
@@ -93,17 +86,71 @@ public class CodeGenerator {
         return type;
     }
 
-    public void emitQuad(String... args) throws IOException {
+    public void emitQuad(String... args) {
         StringBuilder quad = new StringBuilder();
         for (String str : args) {
             quad.append(str).append(" ");
         }
-        writer.write(quad.toString().trim() + "\n");
+        code.add(quad.toString().trim() + "\n");
+    }
+
+    public void editQuad(int line, String... args) {
+        StringBuilder quad = new StringBuilder();
+        for (String str : args) {
+            quad.append(str).append(" ");
+        }
+        code.set(line - 1,  quad.toString().trim() + "\n");
+    }
+
+    public void writeCodeToFile() throws IOException{
+        for (String line : code) {
+            writer.write(line);
+        }
     }
 
     public void close() throws IOException {
         writer.close();
     }
 
+    public void dummyJump(JumpData data) {
+        data.setQuad("JUMP");
+        emitQuad("JUMP", "dummy");
+        jumpStack.push(data);
+    }
+    public void dummyJumpZ(JumpData data) {
+        data.setQuad("JMPZ");
+        emitQuad("JMPZ",  "dummy", data.getZeroVar());
+        jumpZStack.push(data);
+    }
+    public void rectifyJump(){
+        JumpData data = jumpStack.pop();
+        editQuad(data.getOriginalLine(), data.getQuad(),
+                "" +  getCurrentLine());
+    }
+
+    public void rectifyJumpZ(){
+        JumpData data = jumpZStack.pop();
+        editQuad(data.getOriginalLine(), data.getQuad(),"" +  getCurrentLine(), data.getZeroVar());
+    }
+
+    public int getCurrentLine(){
+        return code.size() + 1;
+    }
+
+    public void pushJumpStack(JumpData data){
+        jumpStack.push(data);
+    }
+
+    public JumpData popJumpStack(){
+        return jumpStack.pop();
+    }
+
+    public void pushBreakStack(int line){
+        breakJumpStack.push(line);
+    }
+
+    public int popBreakStack(){
+        return breakJumpStack.pop();
+    }
 
 }

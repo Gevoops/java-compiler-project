@@ -1,15 +1,21 @@
-/* gev testing */
+/* find largest */
 a, b: float;
 c, d: int;
 e , f, g: float;
 h: int;
 {
     input(a);
-    input(c);
+    a = -4 + a;
+    while (a > 0) {
+        a = a - 1;
+        if(a == 3) {
+                   break;
+                }
+        else {
 
+            }
+        output(a);
+        }
 
-    if (c >= a)
-       output(a);
-    else
-       output(c);
+    output(-4);
 }
