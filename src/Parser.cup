@@ -174,7 +174,6 @@ switch_stmt ::=
 
 caselist ::= caselist CASE NUM:n COLON {:
            codeGen.editQuad(codeGen.caseLine, "IASN", codeGen.getSwitchVar(), n );
-           System.out.println(n);
            String res = codeGen.binaryOp("==", n , codeGen.getSwitchVar());
            codeGen.dummyJumpZ(res, codeGen.getCurrentLine());
            codeGen.emitQuad("IASN", codeGen.getSwitchVar(), n);

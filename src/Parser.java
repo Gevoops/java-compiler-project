@@ -746,7 +746,6 @@ class CUP$Parser$actions {
 		String n = (String)((java_cup.runtime.Symbol) CUP$Parser$stack.elementAt(CUP$Parser$top-1)).value;
 
            codeGen.editQuad(codeGen.caseLine, "IASN", codeGen.getSwitchVar(), n );
-           System.out.println(n);
            String res = codeGen.binaryOp("==", n , codeGen.getSwitchVar());
            codeGen.dummyJumpZ(res, codeGen.getCurrentLine());
            codeGen.emitQuad("IASN", codeGen.getSwitchVar(), n);
