@@ -4,18 +4,13 @@ c, d: int;
 e , f, g: float;
 h: int;
 {
-    input(a);
-    a = -4 + a;
-    while (a > 0) {
-        a = a - 1;
-        if(a == 3) {
-                   break;
-                }
-        else {
-
-            }
-        output(a);
-        }
-
-    output(-4);
+    input(c);
+    switch(c)
+    {
+      case 1: output(1);
+      case 2: output(2);
+      case 3: output(3);
+      case 4: output(4);
+      default: output(5);
+    }
 }

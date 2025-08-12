@@ -120,17 +120,15 @@ output_stmt ::= OUTPUT LPAREN expression:e RPAREN SCOLON {:
  :};
 
 if_stmt ::= IF LPAREN boolexpr:be RPAREN {:
-    JumpData data = new JumpData(be, codeGen.getCurrentLine());
-    codeGen.dummyJumpZ(data);
+    codeGen.dummyJumpZ(be, codeGen.getCurrentLine());
  :}
     stmt {:
-     JumpData data1 = new JumpData(codeGen.getCurrentLine());
-     codeGen.dummyJump(data1);
+     codeGen.dummyJump(codeGen.getCurrentLine());
      :}
  ELSE  {:
-     codeGen.rectifyJumpZ();  :}
+     codeGen.patchJumpZ();  :}
     stmt  {:
-     codeGen.rectifyJump();
+     codeGen.patchJump();
  :};
 
 while_stmt ::= {:
@@ -140,26 +138,59 @@ while_stmt ::= {:
 WHILE
  {: codeGen.pushBreakStack(-1);  :}
  LPAREN boolexpr:be RPAREN {:
-    JumpData data = new JumpData(be, codeGen.getCurrentLine());
-    codeGen.dummyJumpZ(data);
+    codeGen.dummyJumpZ(be, codeGen.getCurrentLine());
  :}
-
  stmt  {:
      JumpData data = codeGen.popJumpStack();
      codeGen.emitQuad("JUMP", "" + data.getOriginalLine());
-     codeGen.rectifyJumpZ();
-
+     codeGen.patchJumpZ();
      int lineOfBreak;
      while ((lineOfBreak = codeGen.popBreakStack()) != -1 ) {
          codeGen.editQuad(lineOfBreak, "JUMP","" + codeGen.getCurrentLine());
      }
  :};
 
-switch_stmt ::= SWITCH LPAREN expression RPAREN LBRACE caselist
- DEFAULT COLON stmtlist RBRACE {::};
+switch_stmt ::=
+ {::}
+ SWITCH
+    {: codeGen.pushBreakStack(-1);  :}
+ LPAREN expression:e RPAREN
+    {: codeGen.setSwitchVar(e); :}
+ LBRACE caselist
+   {:
+        String res = codeGen.binaryOp("!=", codeGen.caseNum, codeGen.getSwitchVar());
+        codeGen.dummyJumpZ(res, codeGen.getCurrentLine());
 
-caselist ::= caselist CASE NUM COLON stmtlist {::}
-             |                                {::};
+   :}
+
+ DEFAULT COLON stmtlist RBRACE {:
+   codeGen.patchJumpZ();
+   int lineOfBreak;
+   while ((lineOfBreak = codeGen.popBreakStack()) != -1 ) {
+   codeGen.editQuad(lineOfBreak, "JUMP","" + codeGen.getCurrentLine());
+   } :};
+
+
+
+caselist ::= caselist CASE NUM:n COLON {:
+           codeGen.editQuad(codeGen.caseLine, "IASN", codeGen.getSwitchVar(), n );
+           System.out.println(n);
+           String res = codeGen.binaryOp("==", n , codeGen.getSwitchVar());
+           codeGen.dummyJumpZ(res, codeGen.getCurrentLine());
+           codeGen.emitQuad("IASN", codeGen.getSwitchVar(), n);
+           codeGen.caseLine = codeGen.getCurrentLine() - 1;
+           codeGen.caseNum = n;
+
+         :}
+stmtlist {:
+
+         codeGen.patchJumpZ();
+         :}
+
+         | {: /* epsilon */
+
+          :};
+
 break_stmt ::= BREAK SCOLON  {:
     codeGen.pushBreakStack(codeGen.getCurrentLine());
     codeGen.emitQuad("JUMP", "dummy");

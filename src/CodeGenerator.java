@@ -10,6 +10,9 @@ public class CodeGenerator {
     private final Stack<JumpData> jumpStack = new Stack<>();
     private final Stack<Integer> breakJumpStack = new Stack<>();
     private final List<String> code = new ArrayList<>();
+    private String switchVar;
+    public int caseLine = -1;
+    public String caseNum;
 
     public CodeGenerator(String name) throws IOException {
         writer = new FileWriter(name);
@@ -95,6 +98,9 @@ public class CodeGenerator {
     }
 
     public void editQuad(int line, String... args) {
+        if(line < 0 ) {
+            return;
+        }
         StringBuilder quad = new StringBuilder();
         for (String str : args) {
             quad.append(str).append(" ");
@@ -112,23 +118,31 @@ public class CodeGenerator {
         writer.close();
     }
 
-    public void dummyJump(JumpData data) {
+    public void dummyJump(int line) {
+        JumpData data = new JumpData(line);
         data.setQuad("JUMP");
         emitQuad("JUMP", "dummy");
         jumpStack.push(data);
     }
-    public void dummyJumpZ(JumpData data) {
+    public void dummyJumpZ(String var, int line) {
+        JumpData data = new JumpData(var, line);
         data.setQuad("JMPZ");
-        emitQuad("JMPZ",  "dummy", data.getZeroVar());
+        emitQuad("JMPZ",  "dummy", var);
         jumpZStack.push(data);
     }
-    public void rectifyJump(){
+    public void patchJump(){
         JumpData data = jumpStack.pop();
         editQuad(data.getOriginalLine(), data.getQuad(),
                 "" +  getCurrentLine());
     }
 
-    public void rectifyJumpZ(){
+    public void patchJumpZ(int offset){
+        JumpData data = jumpZStack.pop();
+        editQuad(data.getOriginalLine(), data.getQuad(),
+                "" +  (getCurrentLine() + offset), data.getZeroVar());
+    }
+
+    public void patchJumpZ(){
         JumpData data = jumpZStack.pop();
         editQuad(data.getOriginalLine(), data.getQuad(),"" +  getCurrentLine(), data.getZeroVar());
     }
@@ -153,4 +167,11 @@ public class CodeGenerator {
         return breakJumpStack.pop();
     }
 
+    public String getSwitchVar() {
+        return switchVar;
+    }
+
+    public void setSwitchVar(String switchVar) {
+        this.switchVar = switchVar;
+    }
 }
