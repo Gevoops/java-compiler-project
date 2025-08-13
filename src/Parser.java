@@ -697,7 +697,11 @@ class CUP$Parser$actions {
 		int eleft = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-1)).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-1)).right;
 		String e = (String)((java_cup.runtime.Symbol) CUP$Parser$stack.elementAt(CUP$Parser$top-1)).value;
- codeGen.setSwitchVar(e); 
+
+    String sVar = codeGen.genTemp();
+    codeGen.declare(sVar, "int");
+    codeGen.emitQuad("IASN", sVar,e);
+    codeGen.setSwitchVar(sVar); 
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("NT$8",30, ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;
@@ -828,7 +832,16 @@ class CUP$Parser$actions {
           case 40: // boolexpr ::= boolexpr OR boolterm 
             {
               String RESULT =null;
+		int beleft = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)).left;
+		int beright = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)).right;
+		String be = (String)((java_cup.runtime.Symbol) CUP$Parser$stack.elementAt(CUP$Parser$top-2)).value;
+		int btleft = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).left;
+		int btright = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).right;
+		String bt = (String)((java_cup.runtime.Symbol) CUP$Parser$stack.peek()).value;
 		
+         String temp = codeGen.binaryOp("+",be,bt );
+         RESULT = codeGen.binaryOp("!=", temp, "0");
+         
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("boolexpr",16, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;
@@ -849,7 +862,13 @@ class CUP$Parser$actions {
           case 42: // boolterm ::= boolterm AND boolfactor 
             {
               String RESULT =null;
-		
+		int btleft = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)).left;
+		int btright = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)).right;
+		String bt = (String)((java_cup.runtime.Symbol) CUP$Parser$stack.elementAt(CUP$Parser$top-2)).value;
+		int bfleft = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).left;
+		int bfright = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).right;
+		String bf = (String)((java_cup.runtime.Symbol) CUP$Parser$stack.peek()).value;
+		 RESULT = codeGen.binaryOp("*",bt, bf ); 
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("boolterm",17, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-2)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;
@@ -870,7 +889,10 @@ class CUP$Parser$actions {
           case 44: // boolfactor ::= NOT LPAREN boolexpr RPAREN 
             {
               String RESULT =null;
-		
+		int beleft = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-1)).left;
+		int beright = ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-1)).right;
+		String be = (String)((java_cup.runtime.Symbol) CUP$Parser$stack.elementAt(CUP$Parser$top-1)).value;
+		 RESULT = codeGen.binaryOp("-", "1" , be); 
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("boolfactor",18, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-3)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
             }
           return CUP$Parser$result;

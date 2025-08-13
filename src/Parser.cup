@@ -155,7 +155,11 @@ switch_stmt ::=
  SWITCH
     {: codeGen.pushBreakStack(-1);  :}
  LPAREN expression:e RPAREN
-    {: codeGen.setSwitchVar(e); :}
+    {:
+    String sVar = codeGen.genTemp();
+    codeGen.declare(sVar, "int");
+    codeGen.emitQuad("IASN", sVar,e);
+    codeGen.setSwitchVar(sVar); :}
  LBRACE caselist
    {:
         String res = codeGen.binaryOp("!=", codeGen.caseNum, codeGen.getSwitchVar());
@@ -200,13 +204,16 @@ stmt_block ::= LBRACE stmtlist RBRACE {::};
 stmtlist ::= stmtlist stmt  {::}
              |              {::};
 
-boolexpr ::= boolexpr OR boolterm {::}
+boolexpr ::= boolexpr:be OR boolterm:bt {:
+         String temp = codeGen.binaryOp("+",be,bt );
+         RESULT = codeGen.binaryOp("!=", temp, "0");
+         :}
             | boolterm:bt            {: RESULT = bt; :};
 
-boolterm ::= boolterm AND boolfactor {::}
+boolterm ::= boolterm:bt AND boolfactor:bf {: RESULT = codeGen.binaryOp("*",bt, bf ); :}
             | boolfactor:bf          {:  RESULT = bf; :};
 
-boolfactor ::= NOT LPAREN boolexpr RPAREN  {::}
+boolfactor ::= NOT LPAREN boolexpr:be RPAREN  {: RESULT = codeGen.binaryOp("-", "1" , be); :}
            | expression:e1 RELOP:rel expression:e2  {:
                 RESULT = codeGen.binaryOp(rel, e1, e2);
            :};
