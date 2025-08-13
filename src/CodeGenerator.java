@@ -16,6 +16,7 @@ public class CodeGenerator {
 
     public CodeGenerator(String name) throws IOException {
         writer = new FileWriter(name);
+        pushBreakStack(-2);
     }
 
     public String binaryOp(String op, String op1, String op2) {
@@ -165,6 +166,10 @@ public class CodeGenerator {
 
     public int popBreakStack(){
         return breakJumpStack.pop();
+    }
+
+    public int topBreakStack(){
+        return breakJumpStack.peek();
     }
 
     public String getSwitchVar() {

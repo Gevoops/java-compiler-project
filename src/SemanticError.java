@@ -1,10 +1,7 @@
-package lexing;
-
-
-public class LexingError {
+public class SemanticError {
     private static boolean error = false;
 
-    public LexingError (String message) {
+    public SemanticError (String message) {
 
     }
 
@@ -14,7 +11,6 @@ public class LexingError {
 
     public static void reportError(String message){
         error = true;
-        System.err.println(message + "\n Gev Zoran :)");
+        System.err.println(message + "\n  Gev Zoran :)");
     }
-
 }

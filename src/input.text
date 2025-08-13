@@ -4,6 +4,7 @@ c, d: int;
 e , f, g: float;
 h: int;
 {
+    input(a);
     input(c);
     switch(c) {
       case 1:
@@ -12,16 +13,16 @@ h: int;
       case 2:
         while (c + 4 > 0) {
             c = c - 1;
-            output(32);
+            output(3/2);
         }
       case 3:
-        output(3);@
+        output(3);
       case 4:
-        output(4);%
+        output(4);
       case 5:
         output(5);
       default: {
-        if(c / 2.0 > c / 2){
+        if(c / 2 > c / 2){
             output(1);
         } else {
             output(2);

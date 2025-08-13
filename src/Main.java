@@ -12,7 +12,7 @@ public class Main {
             myParser.setCodeGenerator(cg);
             myParser.parse();
 
-            if(!LexingError.getError()) {
+            if(!LexingError.hasError() && !ParsingError.hasError() & !SemanticError.hasError()) {
                 cg.writeCodeToFile();
                 System.out.println("success!");
             }
