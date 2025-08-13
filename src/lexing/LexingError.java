@@ -8,7 +8,7 @@ public class LexingError {
 
     }
 
-    public boolean getError(){
+    public static boolean getError(){
         return error;
     }
 

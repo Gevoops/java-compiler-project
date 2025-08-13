@@ -1,5 +1,6 @@
 import java.io.FileReader;
 import lexing.Lexer;
+import lexing.LexingError;
 
 public class Main {
     public static void main(String[] args) {
@@ -9,12 +10,14 @@ public class Main {
 
             CodeGenerator cg = new CodeGenerator("output.txt");
             myParser.setCodeGenerator(cg);
-
             myParser.parse();
-            cg.writeCodeToFile();
-            cg.close();
-            System.out.println("success!");
 
+            if(!LexingError.getError()) {
+                cg.writeCodeToFile();
+                System.out.println("success!");
+            }
+
+            cg.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
