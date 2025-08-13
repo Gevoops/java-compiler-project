@@ -1,5 +1,6 @@
-import static compiler.ParserSym.*;
+import static lexing.ParserSym.*;
 import java_cup.runtime.*;
+import lexing.LexingError;
 
 
 %%
@@ -88,4 +89,6 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 "-"?{DIGIT}+"."{DIGIT}* {return  Symbol1(NUM, yytext());}
 
 cast<int> | cast<float>  {return  Symbol1(CAST,yytext());}
+
+. { LexingError.reportError("Illegal character \'" + yytext() + "\' at line :" + (yyline + 1));}
 

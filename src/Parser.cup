@@ -5,6 +5,7 @@ import java.util.*;
 class Parser;
 
 parser code {:
+
     Lexer s;
     CodeGenerator codeGen;
 

@@ -1,5 +1,5 @@
 import java.io.FileReader;
-import compiler.Lexer;
+import lexing.Lexer;
 
 public class Main {
     public static void main(String[] args) {
